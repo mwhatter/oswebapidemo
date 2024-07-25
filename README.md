@@ -15,7 +15,7 @@ This repository hosts a static web application that demonstrates the capabilitie
 
 ## Introduction
 
-This project showcases the use of several modern Web APIs to access and manipulate various features of a user's device through a web browser. It serves as a practical demonstration for developers interested in integrating these APIs into their own projects.
+This project showcases the use of several modern OS Web APIs. This static web app facilitates demonstrations of how these APIs interoperate with web browsers and the operating systems they run on. All source code runs client side with no required server. You could download index.html, open it in your web browser, and it will work the same as it does if you visit the netlify website.
 
 ## Features
 

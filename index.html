@@ -1,0 +1,1029 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Web Browser Client-Side OS API Demo</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #e0f7f5;
+            color: #1e1e1e;
+            margin: 0;
+            padding: 0 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .container {
+            max-width: 1200px;
+            width: 100%;
+            padding: 20px;
+            padding-top: 100px; /* Added padding at the top */
+            background-color: #ffffff;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            margin-bottom: 250px;
+        }
+        h1, h2, h3 {
+            color: #20b2aa;
+        }
+        .feature {
+            margin: 20px 0;
+        }
+        button, input[type="text"], input[type="number"], input[type="url"], textarea {
+            padding: 10px 20px;
+            margin: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        button {
+            background-color: #20b2aa;
+            color: #fff;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #1e968d;
+        }
+        #output {
+            text-align: left;
+            white-space: pre-wrap;
+            max-height: 250px;
+            overflow-y: auto;
+            border: 1px solid #ccc;
+            padding: 10px;
+            background-color: #f9f9f9;
+            position: fixed;
+            bottom: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 90%;
+            max-width: 1200px;
+            height: auto;
+        }
+        .api-description {
+            font-style: italic;
+            margin-bottom: 10px;
+        }
+        #buttonContainer {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: fixed;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 90%;
+            max-width: 1200px;
+            padding: 10px;
+            z-index: 100;
+            border-bottom: 1px solid #ccc;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            background-color: rgba(255, 255, 255, 1);
+        }
+        #backToTop, #clearOutput {
+            font-size: 18px;
+            background-color: #20b2aa;
+            color: white;
+            border: none;
+            outline: none;
+            cursor: pointer;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        #backToTop:hover, #clearOutput:hover {
+            background-color: #1e968d;
+        }
+        .menu {
+            position: relative;
+            display: inline-block;
+        }
+        .menu-content {
+            display: none;
+            position: absolute;
+            background-color: #ffffff;
+            min-width: 160px;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+            z-index: 1;
+        }
+        .menu-content a {
+            color: black;
+            padding: 12px 16px;
+            text-decoration: none;
+            display: block;
+        }
+        .menu-content a:hover {
+            background-color: #ddd;
+        }
+        .menu:hover .menu-content {
+            display: block;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+        }
+        th {
+            background-color: #20b2aa;
+            color: white;
+        }
+        tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+        tr:hover {
+            background-color: #ddd;
+        }
+        .preview {
+            margin: 10px 0;
+        }
+        #dropZone {
+            width: 100%;
+            height: 100px;
+            border: 2px dashed #20b2aa;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #20b2aa;
+            margin: 10px 0;
+        }
+        #dropZone.dragover {
+            background-color: #e0f7f5;
+        }
+        @media (max-width: 600px) {
+            .audio-inputs {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+            }
+        }
+        .toast {
+            visibility: hidden;
+            max-width: 50%;
+            margin: auto;
+            background-color: #333;
+            color: #fff;
+            text-align: center;
+            border-radius: 5px;
+            padding: 16px;
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            right: 0;
+            bottom: 30px;
+            font-size: 17px;
+        }
+        .toast.show {
+            visibility: visible;
+            -webkit-animation: fadein 0.5s, fadeout 0.5s 2.5s;
+            animation: fadein 0.5s, fadeout 0.5s 2.5s;
+        }
+        @-webkit-keyframes fadein {
+            from { bottom: 0; opacity: 0; }
+            to { bottom: 30px; opacity: 1; }
+        }
+        @keyframes fadein {
+            from { bottom: 0; opacity: 0; }
+            to { bottom: 30px; opacity: 1; }
+        }
+        @-webkit-keyframes fadeout {
+            from { bottom: 30px; opacity: 1; }
+            to { bottom: 0; opacity: 0; }
+        }
+        @keyframes fadeout {
+            from { bottom: 30px; opacity: 1; }
+            to { bottom: 0; opacity: 0; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Web Browser Client-Side OS API Demo</h1>
+        <p>
+            This demo showcases the capabilities of various Web APIs that provide access to the underlying operating system features of a device. These APIs enable web applications to leverage device functionalities such as geolocation, file access, audio processing, and more, creating a richer and more interactive user experience.
+        </p>
+        <p>
+            <strong>Web vs. OS APIs:</strong> Web APIs enable communication over the web to fetch resources and data from servers, while OS APIs provide a bridge to the device's hardware and software capabilities, allowing web applications to utilize features like location services, battery status, file manipulation, and more.
+        </p>
+        <div class="feature" id="fetchApiSection">
+            <h2>Single Browser Interactivity</h2>
+            <!-- Fetch API Section -->
+            <div>
+                <h3>Fetch API</h3>
+                <p class="api-description">The Fetch API provides an interface for fetching resources.</p>
+                <div id="headersContainer">
+                    <div class="header-row">
+                        <input type="text" class="header-key" placeholder="Header Key" style="width: 40%;">
+                        <input type="text" class="header-value" placeholder="Header Value" style="width: 40%;">
+                        <button onclick="removeHeaderRow(this)">Remove</button>
+                    </div>
+                </div>
+                <button onclick="addHeader()">Add Header</button>
+                <button onclick="fetchData()">Fetch API - GET Request</button>
+                <button onclick="postData()">Fetch API - POST Request</button>
+                <button onclick="fetchWithHeaders()">Fetch API - With Headers</button>
+                <button onclick="fetchWithErrorHandling()">Fetch API - Error Handling</button>
+            </div>
+            <!-- Web Storage API Section -->
+            <div id="webStorageSection">
+                <h3>Web Storage API</h3>
+                <p class="api-description">The Web Storage API provides mechanisms for storing key-value pairs in a web browser.</p>
+                <button onclick="setLocalStorage()">Web Storage API - Set Local Storage</button>
+                <button onclick="getLocalStorage()">Web Storage API - Get Local Storage</button>
+                <button onclick="removeLocalStorage()">Web Storage API - Remove Local Storage</button>
+                <button onclick="populateLocalStorageWithFetch()">Web Storage API - Populate Local Storage with Fetch</button>
+                <button onclick="setSessionStorage()">Web Storage API - Set Session Storage</button>
+                <button onclick="getSessionStorage()">Web Storage API - Get Session Storage</button>
+                <button onclick="removeSessionStorage()">Web Storage API - Remove Session Storage</button>
+                <button onclick="populateSessionStorageWithFetch()">Web Storage API - Populate Session Storage with Fetch</button>
+                <div id="storageTableContainer"></div>
+            </div>
+            <!-- IndexedDB API Section -->
+            <div id="indexedDBSection">
+                <h3>IndexedDB API</h3>
+                <p class="api-description">The IndexedDB API is a low-level API for storing large amounts of structured data.</p>
+                <button onclick="createIndexedDB()">IndexedDB API - Create Database</button>
+                <button onclick="readDataIndexedDB()">IndexedDB API - Read Data</button>
+                <button onclick="deleteDataIndexedDB()">IndexedDB API - Delete Data</button>
+                <button onclick="fetchAndPopulateIndexedDB()">IndexedDB API - Populate with Fetch</button>
+                <div id="indexedDBTableContainer"></div>
+            </div>
+            <!-- Navigator API Section -->
+            <div id="navigatorApiSection">
+                <h3>Navigator API</h3>
+                <p class="api-description">The Navigator API provides information about the browser and operating system.</p>
+                <button onclick="getNavigatorInfo()">Navigator API - Info</button>
+            </div>
+            <!-- Geolocation API Section -->
+            <div id="geolocationApiSection">
+                <h3>Geolocation API</h3>
+                <p class="api-description">The Geolocation API provides the geographical location of the device.</p>
+                <button onclick="getGeolocation()">Geolocation API</button>
+                <button onclick="watchGeolocation()">Geolocation API - Watch Position</button>
+            </div>
+            <!-- File API Section -->
+            <div id="fileApiSection">
+                <h3>File API</h3>
+                <p class="api-description">The File API allows web applications to interact with local files.</p>
+                <button onclick="getFile()">File API - Read File</button>
+                <div id="dropZone" ondrop="dropHandler(event)" ondragover="dragOverHandler(event)" ondragleave="dragLeaveHandler(event)">Drag & Drop Files Here</div>
+                <input type="file" id="fileInput" multiple style="display:none" onchange="handleFiles(this.files)">
+            </div>
+            <!-- Web Audio API Section -->
+            <div id="webAudioApiSection">
+                <h3>Web Audio API</h3>
+                <p class="api-description">The Web Audio API enables the creation and manipulation of audio content.</p>
+                <button onclick="getWebAudio()">Web Audio API - Play Tone</button>
+                <div class="audio-inputs">
+                    <label for="frequencyInput">Frequency (Hz): </label>
+                    <input type="number" id="frequencyInput" value="440">
+                    <label for="durationInput">Duration (ms): </label>
+                    <input type="number" id="durationInput" value="1000">
+                    <button onclick="playCustomTone()">Play Custom Tone</button>
+                </div>
+            </div>
+            <!-- Notifications API Section -->
+            <div id="notificationsApiSection">
+                <h3>Notifications API</h3>
+                <p class="api-description">The Notifications API allows web pages to send notifications to the user’s device.</p>
+                <input type="text" id="notificationText" placeholder="Enter notification text">
+                <button onclick="showNotification()">Show Notification</button>
+            </div>
+            <!-- Battery Status API Section -->
+            <div id="batteryStatusApiSection">
+                <h3>Battery Status API</h3>
+                <p class="api-description">The Battery Status API provides information about the battery status of the device.</p>
+                <button onclick="getBatteryStatus()">Battery Status API</button>
+            </div>
+            <!-- Vibration API Section -->
+            <div id="vibrationApiSection">
+                <h3>Vibration API</h3>
+                <p class="api-description">The Vibration API provides access to the device’s vibration mechanism.</p>
+                <label for="vibrationPattern">Vibration Pattern (comma separated ms): </label>
+                <input type="text" id="vibrationPattern" value="200,100,200">
+                <button onclick="getVibration()">Vibration API</button>
+            </div>
+            <!-- Fullscreen API Section -->
+            <div id="fullscreenApiSection">
+                <h3>Fullscreen API</h3>
+                <p class="api-description">The Fullscreen API allows an element to be displayed in fullscreen mode.</p>
+                <button onclick="getFullscreen()">Fullscreen API</button>
+            </div>
+            <!-- Device Orientation API Section -->
+            <div id="deviceOrientationApiSection">
+                <h3>Device Orientation API</h3>
+                <p class="api-description">The Device Orientation API provides information about the physical orientation of the device.</p>
+                <button onclick="getDeviceOrientation()">Device Orientation API</button>
+            </div>
+            <!-- Performance API Section -->
+            <div id="performanceApiSection">
+                <h3>Performance API</h3>
+                <p class="api-description">The Performance API provides access to high-resolution timestamps and performance metrics.</p>
+                <button onclick="getPerformance()">Performance API</button>
+            </div>
+        </div>
+    </div>
+    <div id="buttonContainer">
+        <button id="backToTop" onclick="scrollToTop()">Back to Top</button>
+        <div class="menu">
+            <button class="menu-btn" onclick="toggleMenu()">Menu</button>
+            <div class="menu-content">
+                <a href="#" onclick="scrollToTop()">Top</a>
+                <a href="#webStorageSection" onclick="scrollToSection(event, 'webStorageSection')">Web Storage API</a>
+                <a href="#indexedDBSection" onclick="scrollToSection(event, 'indexedDBSection')">IndexedDB API</a>
+                <a href="#navigatorApiSection" onclick="scrollToSection(event, 'navigatorApiSection')">Navigator API</a>
+                <a href="#geolocationApiSection" onclick="scrollToSection(event, 'geolocationApiSection')">Geolocation API</a>
+                <a href="#fileApiSection" onclick="scrollToSection(event, 'fileApiSection')">File API</a>
+                <a href="#webAudioApiSection" onclick="scrollToSection(event, 'webAudioApiSection')">Web Audio API</a>
+                <a href="#notificationsApiSection" onclick="scrollToSection(event, 'notificationsApiSection')">Notifications API</a>
+                <a href="#batteryStatusApiSection" onclick="scrollToSection(event, 'batteryStatusApiSection')">Battery Status API</a>
+                <a href="#vibrationApiSection" onclick="scrollToSection(event, 'vibrationApiSection')">Vibration API</a>
+                <a href="#fullscreenApiSection" onclick="scrollToSection(event, 'fullscreenApiSection')">Fullscreen API</a>
+                <a href="#deviceOrientationApiSection" onclick="scrollToSection(event, 'deviceOrientationApiSection')">Device Orientation API</a>
+                <a href="#performanceApiSection" onclick="scrollToSection(event, 'performanceApiSection')">Performance API</a>
+            </div>
+        </div>
+        <button id="clearOutput" onclick="clearOutput()">Clear Output</button>
+    </div>
+    <div id="output"></div>
+    <div id="toast" class="toast"></div>
+
+    <script>
+        const clipboardHistory = [];
+        let audioCtx;
+        const performanceData = {
+            navigationStart: performance.timing.navigationStart,
+            domContentLoadedEventEnd: null,
+            loadEventEnd: null
+        };
+
+        window.addEventListener('DOMContentLoaded', () => {
+            performanceData.domContentLoadedEventEnd = performance.timing.domContentLoadedEventEnd;
+        });
+
+        window.addEventListener('load', () => {
+            performanceData.loadEventEnd = performance.timing.loadEventEnd;
+        });
+
+        function scrollToTop() {
+            document.body.scrollTop = 0;
+            document.documentElement.scrollTop = 0;
+        }
+
+        function clearOutput() {
+            const output = document.getElementById('output');
+            output.textContent = '';
+        }
+
+        function displayOutput(text, isAppend = false) {
+            const output = document.getElementById('output');
+            if (isAppend) {
+                output.textContent += text + "\n";
+            } else {
+                output.textContent = text;
+            }
+            adjustOutputHeight();
+        }
+
+        function adjustOutputHeight() {
+            const output = document.getElementById('output');
+            output.style.height = 'auto';
+            if (output.scrollHeight > 250) {
+                output.style.height = '250px';
+            }
+        }
+
+        function showToast(message) {
+            const toast = document.getElementById("toast");
+            toast.textContent = message;
+            toast.className = "toast show";
+            setTimeout(() => { toast.className = toast.className.replace("show", ""); }, 3000);
+        }
+
+        function getNavigatorInfo() {
+            const description = "Navigator API provides information about the user's browser and operating system. This can include details such as the user agent, platform, language, and more. This information is useful for tailoring content or functionality to different browsers and devices.";
+            const data = `Navigator Information:
+- User Agent: ${navigator.userAgent}
+- Platform: ${navigator.platform}
+- Language: ${navigator.language}
+- Online: ${navigator.onLine}
+- Cookies Enabled: ${navigator.cookieEnabled}
+- Hardware Concurrency: ${navigator.hardwareConcurrency}
+- Max Touch Points: ${navigator.maxTouchPoints}`;
+            displayOutput(description + "\n" + data);
+        }
+
+        function getGeolocation() {
+            const description = "The Geolocation API provides access to the geographical location of the device. This can be used to provide location-based services and features, such as mapping, geotagging, and local search results.";
+            displayOutput(description);
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(position => {
+                    const data = `Geolocation:
+- Latitude: ${position.coords.latitude}
+- Longitude: ${position.coords.longitude}
+- Accuracy: ${position.coords.accuracy} meters`;
+                    displayOutput(data);
+                }, error => {
+                    displayOutput(`Geolocation Error: ${error.message}`);
+                });
+            } else {
+                displayOutput("Geolocation is not supported by this browser.");
+            }
+        }
+
+        function watchGeolocation() {
+            const description = "The Geolocation API also allows for tracking the device's location over time. This can be used for applications that require continuous location updates.";
+            displayOutput(description);
+            if (navigator.geolocation) {
+                navigator.geolocation.watchPosition(position => {
+                    const data = `Geolocation (Watch Position):
+- Latitude: ${position.coords.latitude}
+- Longitude: ${position.coords.longitude}
+- Accuracy: ${position.coords.accuracy} meters`;
+                    displayOutput(data, true);
+                }, error => {
+                    displayOutput(`Geolocation Error: ${error.message}`);
+                });
+            } else {
+                displayOutput("Geolocation is not supported by this browser.");
+            }
+        }
+
+        async function fetchData() {
+            const description = "The Fetch API provides a way to make network requests and handle responses. It is used to fetch resources, such as files, data, and more, from a server. The Fetch API is more powerful and flexible than the older XMLHttpRequest.";
+            displayOutput(description + "\nFetching data...");
+            try {
+                const response = await fetch('https://jsonplaceholder.typicode.com/posts/1');
+                const data = await response.json();
+                localStorage.setItem('fetchedData', JSON.stringify(data));
+                displayOutput(`Fetch API (GET Request):
+- URL: https://jsonplaceholder.typicode.com/posts/1
+- Data: ${JSON.stringify(data, null, 2)}`);
+            } catch (error) {
+                displayOutput(`Fetch Error: ${error.message}`);
+            }
+        }
+
+        async function postData() {
+            const description = "The Fetch API allows you to make POST requests to send data to a server. Here, we demonstrate a POST request.";
+            displayOutput(description + "\nPosting data...");
+            try {
+                const response = await fetch('https://jsonplaceholder.typicode.com/posts', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        title: 'foo',
+                        body: 'bar',
+                        userId: 1
+                    })
+                });
+                const data = await response.json();
+                localStorage.setItem('fetchedData', JSON.stringify(data));
+                displayOutput(`Fetch API (POST Request):
+- URL: https://jsonplaceholder.typicode.com/posts
+- Data: ${JSON.stringify(data, null, 2)}`);
+            } catch (error) {
+                displayOutput(`Fetch Error: ${error.message}`);
+            }
+        }
+
+        async function fetchWithHeaders() {
+            const description = "The Fetch API allows you to set custom headers, which can be used for authentication, content negotiation, and more. Here, we demonstrate a fetch request with custom headers.";
+            displayOutput(description + "\nFetching data with headers...");
+            const headers = {};
+            document.querySelectorAll('.header-row').forEach(row => {
+                const key = row.querySelector('.header-key').value;
+                const value = row.querySelector('.header-value').value;
+                if (key && value) {
+                    headers[key] = value;
+                }
+            });
+            try {
+                const response = await fetch('https://jsonplaceholder.typicode.com/posts/1', { headers });
+                const data = await response.json();
+                localStorage.setItem('fetchedData', JSON.stringify(data));
+                displayOutput(`Fetch API with Headers:
+- URL: https://jsonplaceholder.typicode.com/posts/1
+- Headers: ${JSON.stringify(headers, null, 2)}
+- Data: ${JSON.stringify(data, null, 2)}`);
+            } catch (error) {
+                displayOutput(`Fetch Error: ${error.message}`);
+            }
+        }
+
+        async function fetchWithErrorHandling() {
+            const description = "The Fetch API allows you to handle errors gracefully. Here, we demonstrate fetching data with error handling.";
+            displayOutput(description + "\nFetching data with error handling...");
+            const url = 'https://jsonplaceholder.typicode.com/invalid-url';
+            displayOutput(`URL: ${url}`);
+            try {
+                const response = await fetch(url);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const data = await response.json();
+                displayOutput(`Fetch API (Error Handling):
+- URL: ${url}
+- Data: ${JSON.stringify(data)}`);
+            } catch (error) {
+                displayOutput(`Fetch Error: ${error.message}`);
+            }
+        }
+
+        function setLocalStorage() {
+            const description = "Setting data in Local Storage. This data will persist across sessions and can be accessed later.";
+            const data = { name: 'John Doe', age: 30, city: 'New York' };
+            localStorage.setItem('user', JSON.stringify(data));
+            displayOutput(description + "\nLocal Storage: Data has been set.");
+        }
+
+        function getLocalStorage() {
+            const description = "Getting data from Local Storage. This data persists across sessions.";
+            const data = JSON.parse(localStorage.getItem('fetchedUsers') || localStorage.getItem('user'));
+            displayOutput(description + `\nLocal Storage: ${data ? JSON.stringify(data, null, 2) : 'No data found'}`);
+            if (data) {
+                displayStorageTable(data, 'storageTableContainer');
+            }
+        }
+
+        function removeLocalStorage() {
+            const description = "Removing data from Local Storage.";
+            localStorage.removeItem('user');
+            localStorage.removeItem('fetchedUsers');
+            displayOutput(description + "\nLocal Storage: Data has been removed.");
+            displayStorageTable([], 'storageTableContainer');
+        }
+
+        function setSessionStorage() {
+            const description = "Setting data in Session Storage. This data will persist only for the current session.";
+            const data = { sessionID: 'abc123', status: 'active' };
+            sessionStorage.setItem('session', JSON.stringify(data));
+            displayOutput(description + "\nSession Storage: Data has been set.");
+        }
+
+        function getSessionStorage() {
+            const description = "Getting data from Session Storage. This data persists only for the current session.";
+            const data = JSON.parse(sessionStorage.getItem('fetchedUsers') || sessionStorage.getItem('session'));
+            displayOutput(description + `\nSession Storage: ${data ? JSON.stringify(data, null, 2) : 'No data found'}`);
+            if (data) {
+                displayStorageTable(data, 'storageTableContainer');
+            }
+        }
+
+        function removeSessionStorage() {
+            const description = "Removing data from Session Storage.";
+            sessionStorage.removeItem('session');
+            sessionStorage.removeItem('fetchedUsers');
+            displayOutput(description + "\nSession Storage: Data has been removed.");
+            displayStorageTable([], 'storageTableContainer');
+        }
+
+        async function populateLocalStorageWithFetch() {
+            const description = "The Web Storage API can be used in combination with the Fetch API to store data fetched from a server. Here, we fetch data and store it in local storage.";
+            displayOutput(description + "\nFetching data to populate Local Storage...");
+            try {
+                const response = await fetch('https://jsonplaceholder.typicode.com/users');
+                const data = await response.json();
+                localStorage.setItem('fetchedUsers', JSON.stringify(data));
+                displayOutput("Web Storage API: Data has been fetched and stored in Local Storage.");
+                displayStorageTable(data, 'storageTableContainer');
+            } catch (error) {
+                displayOutput(`Fetch Error: ${error.message}`);
+            }
+        }
+
+        async function populateSessionStorageWithFetch() {
+            const description = "The Web Storage API can be used in combination with the Fetch API to store data fetched from a server. Here, we fetch data and store it in session storage.";
+            displayOutput(description + "\nFetching data to populate Session Storage...");
+            try {
+                const response = await fetch('https://jsonplaceholder.typicode.com/users');
+                const data = await response.json();
+                sessionStorage.setItem('fetchedUsers', JSON.stringify(data));
+                displayOutput("Web Storage API: Data has been fetched and stored in Session Storage.");
+                displayStorageTable(data, 'storageTableContainer');
+            } catch (error) {
+                displayOutput(`Fetch Error: ${error.message}`);
+            }
+        }
+
+        function createIndexedDB() {
+            const description = "Creating an IndexedDB database. This example demonstrates creating a database and an object store.";
+            displayOutput(description);
+            const request = indexedDB.open('MyTestDatabase', 1);
+            request.onupgradeneeded = event => {
+                const db = event.target.result;
+                db.createObjectStore('store', { keyPath: 'id' });
+            };
+            request.onsuccess = event => {
+                displayOutput("IndexedDB database created successfully.");
+            };
+            request.onerror = event => {
+                displayOutput(`IndexedDB Error: ${event.target.errorCode}`);
+            };
+        }
+
+        function readDataIndexedDB() {
+            const description = "Reading data from an IndexedDB database.";
+            displayOutput(description);
+            const request = indexedDB.open('MyTestDatabase', 1);
+            request.onsuccess = event => {
+                const db = event.target.result;
+                const transaction = db.transaction('store', 'readonly');
+                const store = transaction.objectStore('store');
+                const getAllRequest = store.getAll();
+                getAllRequest.onsuccess = event => {
+                    const data = event.target.result;
+                    displayOutput(`Data read from IndexedDB: ${data.length} records found.`);
+                    displayStorageTable(data, 'indexedDBTableContainer');
+                };
+                getAllRequest.onerror = event => {
+                    displayOutput(`IndexedDB Read Error: ${event.target.errorCode}`);
+                };
+            };
+        }
+
+        function deleteDataIndexedDB() {
+            const description = "Deleting data from an IndexedDB database.";
+            displayOutput(description);
+            const request = indexedDB.open('MyTestDatabase', 1);
+            request.onsuccess = event => {
+                const db = event.target.result;
+                const transaction = db.transaction('store', 'readwrite');
+                const store = transaction.objectStore('store');
+                store.clear();
+                transaction.oncomplete = () => {
+                    displayOutput("Data deleted from IndexedDB successfully.");
+                    displayStorageTable([], 'indexedDBTableContainer');
+                };
+                transaction.onerror = event => {
+                    displayOutput(`IndexedDB Transaction Error: ${event.target.errorCode}`);
+                };
+            };
+        }
+
+        async function fetchAndPopulateIndexedDB() {
+            const description = "The IndexedDB API can be used in combination with the Fetch API to store data fetched from a server. Here, we fetch data and store it in IndexedDB.";
+            displayOutput(description + "\nFetching data to populate IndexedDB...");
+            try {
+                const response = await fetch('https://jsonplaceholder.typicode.com/comments');
+                const data = await response.json();
+                const request = indexedDB.open('MyTestDatabase', 1);
+                request.onupgradeneeded = event => {
+                    const db = event.target.result;
+                    const store = db.createObjectStore('store', { keyPath: 'id' });
+                    store.createIndex('postId', 'postId', { unique: false });
+                    store.createIndex('email', 'email', { unique: false });
+                };
+                request.onsuccess = event => {
+                    const db = event.target.result;
+                    const transaction = db.transaction('store', 'readwrite');
+                    const store = transaction.objectStore('store');
+                    store.clear(); // Clear existing data before populating new data
+                    data.forEach(item => store.put(item));
+                    displayOutput("IndexedDB populated with fetched data.");
+                    displayStorageTable(data, 'indexedDBTableContainer');
+                };
+                request.onerror = event => {
+                    displayOutput(`IndexedDB Error: ${event.target.errorCode}`);
+                };
+            } catch (error) {
+                displayOutput(`Fetch Error: ${error.message}`);
+            }
+        }
+
+        function getWebAudio() {
+            const description = "The Web Audio API enables the creation and manipulation of audio content. This can be used for audio processing, effects, and generating sound.";
+            displayOutput(description);
+            if ('AudioContext' in window || 'webkitAudioContext' in window) {
+                const AudioContext = window.AudioContext || window.webkitAudioContext;
+                audioCtx = new AudioContext();
+                const oscillator = audioCtx.createOscillator();
+                oscillator.type = 'square';
+                oscillator.frequency.setValueAtTime(440, audioCtx.currentTime); // A4 note
+                oscillator.connect(audioCtx.destination);
+                oscillator.start();
+                oscillator.stop(audioCtx.currentTime + 1); // play for 1 second
+                displayOutput("Web Audio API: Playing 440Hz tone for 1 second.");
+            } else {
+                displayOutput("Web Audio API is not supported by this browser.");
+            }
+        }
+
+        function playCustomTone() {
+            const frequency = document.getElementById('frequencyInput').value;
+            const duration = document.getElementById('durationInput').value;
+            const description = `Playing custom tone at ${frequency} Hz for ${duration} ms.`;
+            displayOutput(description);
+            if ('AudioContext' in window || 'webkitAudioContext' in window) {
+                const AudioContext = window.AudioContext || window.webkitAudioContext;
+                audioCtx = new AudioContext();
+                const oscillator = audioCtx.createOscillator();
+                oscillator.type = 'sine';
+                oscillator.frequency.setValueAtTime(frequency, audioCtx.currentTime);
+                oscillator.connect(audioCtx.destination);
+                oscillator.start();
+                oscillator.stop(audioCtx.currentTime + duration / 1000); // play for specified duration
+                displayOutput(`Web Audio API: Playing ${frequency} Hz tone for ${duration} ms.`);
+            } else {
+                displayOutput("Web Audio API is not supported by this browser.");
+            }
+        }
+
+        function showNotification() {
+            const text = document.getElementById('notificationText').value || 'Hello, Notifications API!';
+            if ('Notification' in window) {
+                Notification.requestPermission().then(permission => {
+                    if (permission === 'granted') {
+                        new Notification(text);
+                        showToast(text);
+                        displayOutput("Notifications API: Notification sent.");
+                    } else {
+                        displayOutput(`Notifications API: Permission ${permission}`);
+                    }
+                });
+            } else {
+                displayOutput("Notifications API is not supported by this browser.");
+            }
+        }
+
+        function getBatteryStatus() {
+            const description = "The Battery Status API provides information about the battery status of the device. This can be used to monitor battery level, charging status, and more.";
+            displayOutput(description);
+            if ('getBattery' in navigator) {
+                navigator.getBattery().then(battery => {
+                    displayOutput(`Battery Status API:
+- Level: ${battery.level * 100}%
+- Charging: ${battery.charging}
+- Charging Time: ${battery.chargingTime} seconds
+- Discharging Time: ${battery.dischargingTime} seconds`);
+                });
+            } else {
+                displayOutput("Battery Status API is not supported by this browser.");
+            }
+        }
+
+        function getFullscreen() {
+            const description = "The Fullscreen API allows an element to be displayed in fullscreen mode. This can be used for immersive experiences, such as games and videos.";
+            displayOutput(description);
+            if (document.fullscreenEnabled) {
+                const element = document.documentElement;
+                element.requestFullscreen().then(() => {
+                    displayOutput("Fullscreen API: Fullscreen mode enabled.");
+                }).catch(err => {
+                    displayOutput(`Fullscreen API Error: ${err.message}`);
+                });
+            } else {
+                displayOutput("Fullscreen API is not supported by this browser.");
+            }
+        }
+
+        function getVibration() {
+            const description = "The Vibration API provides access to the device's vibration mechanism. This can be used for notifications, feedback, and more.";
+            const pattern = document.getElementById('vibrationPattern').value.split(',').map(Number);
+            displayOutput(description);
+            if (navigator.vibrate) {
+                navigator.vibrate(pattern);
+                displayOutput(`Vibration API: Vibrating with pattern [${pattern.join(', ')}]`);
+            } else {
+                displayOutput("Vibration API is not supported by this browser.");
+            }
+        }
+
+        async function getClipboardContents() {
+            const description = "The Clipboard API provides access to the clipboard for copying and pasting text. This can be used to read and write text to the clipboard.";
+            displayOutput(description);
+            if (navigator.clipboard) {
+                try {
+                    const text = await navigator.clipboard.readText();
+                    clipboardHistory.push(text);
+                    displayOutput(`Clipboard Contents: ${text}`);
+                } catch (err) {
+                    displayOutput(`Clipboard API Error: ${err}`);
+                }
+            } else {
+                displayOutput("Clipboard API is not supported by this browser.");
+            }
+        }
+
+        function getClipboardHistory() {
+            const description = "Displaying the history of clipboard contents. This includes all the text that has been copied to the clipboard during this session.";
+            displayOutput(description);
+            displayOutput(`Clipboard History:\n${clipboardHistory.join('\n')}`);
+        }
+
+        function getPerformance() {
+            const description = "The Performance API provides access to high-resolution timestamps and performance metrics. This can be used to measure the performance of web applications.";
+            const now = performance.now();
+            const timing = performance.timing;
+            const navigationTime = timing.loadEventEnd - timing.navigationStart;
+            const navigationStartHumanReadable = new Date(timing.navigationStart).toLocaleString();
+            displayOutput(description);
+            displayOutput(`Performance API:
+- Navigation Start: ${navigationStartHumanReadable}
+- DOM Content Loaded: ${performanceData.domContentLoadedEventEnd}
+- Load Event End: ${performanceData.loadEventEnd}
+- Time since Navigation Start: ${navigationTime} ms
+- Time since load: ${now} ms`);
+        }
+
+        function getDeviceOrientation() {
+            const description = "The Device Orientation API provides information about the physical orientation of the device. This can be used for applications that respond to device movements, such as games and augmented reality.";
+            displayOutput(description);
+            if ('DeviceOrientationEvent' in window) {
+                window.addEventListener('deviceorientation', event => {
+                    displayOutput(`Device Orientation API:
+- Alpha: ${event.alpha}
+- Beta: ${event.beta}
+- Gamma: ${event.gamma}`);
+                }, { once: true });
+            } else {
+                displayOutput("Device Orientation API is not supported by this browser.");
+            }
+        }
+
+        function displayStorageTable(data, containerId) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = '';
+
+            if (data.length === 0) {
+                container.textContent = 'No data to display';
+                return;
+            }
+
+            const table = document.createElement('table');
+            const headerRow = document.createElement('tr');
+
+            const headers = Object.keys(data[0]);
+            headers.forEach(header => {
+                const th = document.createElement('th');
+                th.textContent = header;
+                headerRow.appendChild(th);
+            });
+            table.appendChild(headerRow);
+
+            data.forEach(record => {
+                const row = document.createElement('tr');
+                headers.forEach(header => {
+                    const td = document.createElement('td');
+                    td.textContent = record[header];
+                    row.appendChild(td);
+                });
+                table.appendChild(row);
+            });
+
+            container.appendChild(table);
+            adjustOutputHeight();
+        }
+
+        function handleFiles(files) {
+            Array.from(files).forEach(file => {
+                const reader = new FileReader();
+                reader.onload = event => {
+                    const content = event.target.result;
+                    displayFileContent(content, file.type, file.name, file.size);
+                };
+                if (file.type.startsWith('text/')) {
+                    reader.readAsText(file);
+                } else if (file.type.startsWith('image/') || file.type.startsWith('audio/') || file.type.startsWith('video/') || file.type === 'application/pdf') {
+                    reader.readAsDataURL(file);
+                } else {
+                    reader.readAsArrayBuffer(file);
+                }
+            });
+        }
+
+        function displayFileContent(content, type, fileName, fileSize) {
+            const output = document.getElementById('output');
+            const preview = document.createElement('div');
+            preview.classList.add('preview');
+
+            const fileInfo = document.createElement('p');
+            fileInfo.textContent = `File Name: ${fileName}, File Size: ${fileSize} bytes`;
+            preview.appendChild(fileInfo);
+
+            const contentLabel = document.createElement('p');
+            contentLabel.textContent = 'Content:';
+            preview.appendChild(contentLabel);
+
+            if (type.startsWith('text/')) {
+                const pre = document.createElement('pre');
+                pre.textContent = content;
+                preview.appendChild(pre);
+            } else if (type.startsWith('image/')) {
+                const img = document.createElement('img');
+                img.src = content;
+                img.alt = fileName;
+                img.style.maxWidth = '100%';
+                preview.appendChild(img);
+            } else if (type.startsWith('audio/')) {
+                const audio = document.createElement('audio');
+                audio.controls = true;
+                audio.src = content;
+                preview.appendChild(audio);
+            } else if (type.startsWith('video/')) {
+                const video = document.createElement('video');
+                video.controls = true;
+                video.style.maxWidth = '100%';
+                video.src = content;
+                preview.appendChild(video);
+            } else if (type === 'application/pdf') {
+                const iframe = document.createElement('iframe');
+                iframe.src = content;
+                iframe.style.width = '100%';
+                iframe.style.height = '500px';
+                preview.appendChild(iframe);
+            } else {
+                const blob = new Blob([content], { type });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = fileName;
+                a.textContent = `Download ${fileName}`;
+                preview.appendChild(a);
+            }
+
+            output.appendChild(preview);
+            adjustOutputHeight();
+        }
+
+        function dropHandler(event) {
+            event.preventDefault();
+            handleFiles(event.dataTransfer.files);
+        }
+
+        function dragOverHandler(event) {
+            event.preventDefault();
+            const dropZone = document.getElementById('dropZone');
+            dropZone.classList.add('dragover');
+        }
+
+        function dragLeaveHandler(event) {
+            event.preventDefault();
+            const dropZone = document.getElementById('dropZone');
+            dropZone.classList.remove('dragover');
+        }
+
+        function toggleMenu() {
+            const menuContent = document.querySelector('.menu-content');
+            if (menuContent.style.display === 'block') {
+                menuContent.style.display = 'none';
+            } else {
+                menuContent.style.display = 'block';
+            }
+        }
+
+        function closeMenu() {
+            const menuContent = document.querySelector('.menu-content');
+            if (menuContent) {
+                menuContent.style.display = 'none';
+            }
+        }
+
+        function addHeader() {
+            const headersContainer = document.getElementById('headersContainer');
+            const headerRow = document.createElement('div');
+            headerRow.className = 'header-row';
+            headerRow.innerHTML = `
+                <input type="text" class="header-key" placeholder="Header Key" style="width: 40%;">
+                <input type="text" class="header-value" placeholder="Header Value" style="width: 40%;">
+                <button onclick="removeHeaderRow(this)">Remove</button>
+            `;
+            headersContainer.appendChild(headerRow);
+        }
+
+        function removeHeaderRow(button) {
+            const headersContainer = document.getElementById('headersContainer');
+            headersContainer.removeChild(button.parentElement);
+        }
+
+        function scrollToSection(event, sectionId) {
+            event.preventDefault();
+            const section = document.getElementById(sectionId);
+            const sectionPosition = section.getBoundingClientRect().top + window.scrollY - window.innerHeight / 2 + section.clientHeight / 2;
+            window.scrollTo({
+                top: sectionPosition,
+                behavior: 'smooth'
+            });
+        }
+
+        document.addEventListener('click', function(event) {
+            const menuContent = document.querySelector('.menu-content');
+            if (!event.target.matches('.menu-btn') && menuContent.style.display === 'block') {
+                menuContent.style.display = 'none';
+            }
+        });
+
+        document.querySelectorAll('.menu-content a').forEach(anchor => {
+            anchor.addEventListener('click', function() {
+                closeMenu();
+            });
+        });
+    </script>
+</body>
+</html>
